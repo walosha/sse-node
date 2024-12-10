@@ -1,0 +1,60 @@
+<div class="container">
+    <h1>Notification App</h1>
+    <form id="notification-form">
+        <input
+            type="text"
+            id="userId"
+            placeholder="Enter your User ID"
+            required
+        />
+        <input
+            type="text"
+            id="message"
+            placeholder="Enter your notification"
+            required
+        />
+        <button type="submit">Send Notification</button>
+    </form>
+    <div id="notifications">
+        <h2>Notifications:</h2>
+        <ul id="notifications-list"></ul>
+    </div>
+</div>
+
+<script>
+    // Replace 'user123' with the actual user ID
+    const userId = prompt('Enter your User ID:');
+
+    // Setup SSE connection with user ID
+    const eventSource = new EventSource(
+        `/sse?userId=${encodeURIComponent(userId)}`
+    );
+    const notificationsList = document.getElementById('notifications-list');
+
+    eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const listItem = document.createElement('li');
+        listItem.textContent = data.message;
+        notificationsList.appendChild(listItem);
+    };
+
+    // Handle form submission
+    const form = document.getElementById('notification-form');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const targetUserId = document.getElementById('userId').value;
+        const message = document.getElementById('message').value;
+
+        const response = await fetch('/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: targetUserId, message }),
+        });
+
+        if (response.ok) {
+            document.getElementById('message').value = '';
+        } else {
+            alert('Failed to send notification');
+        }
+    });
+</script>
